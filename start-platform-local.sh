@@ -120,11 +120,11 @@ else
 fi
 
 echo -e "${YELLOW}Starting Redpanda (Kafka), Kpow, Flex, and Flink...${NC}"
-docker compose -f compose-local.yml up -d redpanda kpow flex jobmanager taskmanager
+docker compose -f compose-local.yml up -d redpanda-0 redpanda-1 redpanda-2 kpow flex jobmanager taskmanager
 
 # Wait for Redpanda to be healthy
 echo -e "${YELLOW}Waiting for Redpanda to be healthy...${NC}"
-timeout 60 bash -c 'until docker compose -f compose-local.yml ps redpanda | grep -q "healthy"; do sleep 2; echo -n "."; done' || {
+timeout 60 bash -c 'until docker compose -f compose-local.yml ps redpanda-0 | grep -q "healthy"; do sleep 2; echo -n "."; done' || {
     echo -e "\n${RED}✗ Redpanda failed to start${NC}"
     exit 1
 }

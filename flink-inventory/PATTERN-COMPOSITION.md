@@ -343,7 +343,7 @@ Emit to main output too
 
 ```bash
 # 1. Start Kafka
-docker compose up -d redpanda
+docker compose up -d redpanda-0 redpanda-1 redpanda-2
 
 # 2. Create sample data
 mkdir -p data
@@ -373,7 +373,7 @@ java -cp flink-inventory/build/libs/flink-inventory.jar \
 
 ```bash
 # Publish updates to Kafka
-docker exec -it redpanda rpk topic produce product-updates
+docker exec -it redpanda-0 rpk topic produce product-updates
 
 # Type (Ctrl+D to send, Ctrl+C to exit):
 {"productId":"LAPTOP_001","name":"Gaming Laptop","inventory":8,"price":1299.99,"category":"Electronics"}

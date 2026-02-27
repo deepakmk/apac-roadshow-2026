@@ -1,44 +1,110 @@
 services:
-  redpanda:
+  redpanda-0:
     image: docker.redpanda.com/redpandadata/redpanda:v25.1.1
-    container_name: redpanda
+    container_name: redpanda-0
     command:
       - redpanda
       - start
       - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19092
-      - --advertise-kafka-addr internal://redpanda:9092,external://localhost:19092
+      - --advertise-kafka-addr internal://redpanda-0:9092,external://localhost:19092
       - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
-      - --advertise-pandaproxy-addr internal://redpanda:8082,external://localhost:18082
-      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
-      - --rpc-addr redpanda:33145
-      - --advertise-rpc-addr redpanda:33145
-      - --mode dev-container
+      - --advertise-pandaproxy-addr internal://redpanda-0:8082,external://localhost:18082
+      - --rpc-addr 0.0.0.0:33145
+      - --advertise-rpc-addr redpanda-0:33145
       - --smp 1
+      - --memory 1G
+      - --mode dev-container
       - --default-log-level=info
-    volumes:
-      - redpanda-data:/var/lib/redpanda/data
     ports:
-      #- 18081:18081
       - 18082:18082
       - 19092:19092
       - 19644:9644
+    volumes:
+      - redpanda-0:/var/lib/redpanda/data
     healthcheck:
-      test:
-        ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.*true' || exit 1"]
-      interval: 15s
+      test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.*true' || exit 1"]
+      interval: 10s
       timeout: 3s
       retries: 5
       start_period: 5s
 
+  redpanda-1:
+    image: docker.redpanda.com/redpandadata/redpanda:v25.1.1
+    container_name: redpanda-1
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19093
+      - --advertise-kafka-addr internal://redpanda-1:9092,external://localhost:19093
+      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18083
+      - --advertise-pandaproxy-addr internal://redpanda-1:8082,external://localhost:18083
+      - --rpc-addr 0.0.0.0:33145
+      - --advertise-rpc-addr redpanda-1:33145
+      - --smp 1
+      - --memory 1G
+      - --mode dev-container
+      - --default-log-level=info
+      - --seeds redpanda-0:33145
+    ports:
+      - 18083:18082
+      - 19093:19092
+      - 19645:9644
+    volumes:
+      - redpanda-1:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.*true' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    depends_on:
+      - redpanda-0
+
+  redpanda-2:
+    image: docker.redpanda.com/redpandadata/redpanda:v25.1.1
+    container_name: redpanda-2
+    command:
+      - redpanda
+      - start
+      - --kafka-addr internal://0.0.0.0:9092,external://0.0.0.0:19094
+      - --advertise-kafka-addr internal://redpanda-2:9092,external://localhost:19094
+      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18084
+      - --advertise-pandaproxy-addr internal://redpanda-2:8082,external://localhost:18084
+      - --rpc-addr 0.0.0.0:33145
+      - --advertise-rpc-addr redpanda-2:33145
+      - --smp 1
+      - --memory 1G
+      - --mode dev-container
+      - --default-log-level=info
+      - --seeds redpanda-0:33145
+    ports:
+      - 18084:18082
+      - 19094:19092
+      - 19646:9644
+    volumes:
+      - redpanda-2:/var/lib/redpanda/data
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health | grep -E 'Healthy:.*true' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    depends_on:
+      - redpanda-0
+
   redpanda-init-topics:
     image: docker.redpanda.com/redpandadata/redpanda:v25.1.1
     depends_on:
-      redpanda:
+      redpanda-0:
+        condition: service_healthy
+      redpanda-1:
+        condition: service_healthy
+      redpanda-2:
         condition: service_healthy
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        rpk topic create websocket_fanout processing_fanout ecommerce_events ecommerce_processing_fanout product-updates recommendations inventory_updates inventory-events shopping-cart-events basket-patterns order-events product-recommendations -X brokers=redpanda:9092
+        rpk topic create websocket_fanout processing_fanout ecommerce_events ecommerce_processing_fanout product-updates recommendations inventory_updates inventory-events shopping-cart-events basket-patterns order-events product-recommendations -X brokers=redpanda-0:9092,redpanda-1:9092,redpanda-2:9092
         echo "Topics created successfully"
 
   postgres:
@@ -84,7 +150,11 @@ services:
     ports:
       - "13000:3000"
     depends_on:
-      redpanda:
+      redpanda-0:
+        condition: service_healthy
+      redpanda-1:
+        condition: service_healthy
+      redpanda-2:
         condition: service_healthy
     environment:
       ENVIRONMENT_NAME: "Local Redpands Cluster"
@@ -170,5 +240,7 @@ services:
         condition: service_healthy
 
 volumes:
-  redpanda-data:
+  redpanda-0:
+  redpanda-1:
+  redpanda-2:
   postgres-data:

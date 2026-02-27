@@ -124,7 +124,7 @@ Each pattern can be run standalone:
 
 ```bash
 # Start Kafka (if needed)
-docker compose up -d redpanda
+docker compose up -d redpanda-0 redpanda-1 redpanda-2
 
 # Build the project
 ./gradlew :flink-inventory:build
@@ -585,7 +585,7 @@ java -version
 docker compose ps
 
 # View Kafka topics
-docker exec -it redpanda rpk topic list
+docker exec -it redpanda-0 rpk topic list
 
 # View logs
 tail -f logs/inventory.log

@@ -113,7 +113,7 @@ DataStream<String> stream = env.fromSource(
 
 ```bash
 # 1. Start Kafka/Redpanda
-docker compose up -d redpanda
+docker compose up -d redpanda-0 redpanda-1 redpanda-2
 
 # 2. Create sample data file
 echo '[{"productId":"P001","name":"Laptop"}]' > data/initial-products.json
@@ -127,7 +127,7 @@ echo '[{"productId":"P001","name":"Laptop"}]' > data/initial-products.json
 # - Then waiting for Kafka messages
 
 # 5. Publish to Kafka to see live processing
-docker exec -it redpanda rpk topic produce product-updates
+docker exec -it redpanda-0 rpk topic produce product-updates
 # Type: {"productId":"P002","name":"Mouse"}
 # Press Ctrl+C
 ```

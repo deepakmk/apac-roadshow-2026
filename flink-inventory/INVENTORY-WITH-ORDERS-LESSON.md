@@ -163,10 +163,10 @@ tail -f logs/inventory.log
 ### Test 4: Check Kafka Topics
 ```bash
 # See inventory events
-docker exec redpanda rpk topic consume inventory-events --brokers localhost:19092
+docker exec redpanda-0 rpk topic consume inventory-events --brokers localhost:19092
 
 # See order events
-docker exec redpanda rpk topic consume order-events --brokers localhost:19092
+docker exec redpanda-0 rpk topic consume order-events --brokers localhost:19092
 ```
 
 ## Learning Outcomes
